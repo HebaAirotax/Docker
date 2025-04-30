@@ -1,9 +1,19 @@
 DB Backup
 .env
 
-!nginx/conf.d
-!nginx/ssl
-!php/supervisor.d
+# Ignore everything in nginx/conf.d directory
 nginx/conf.d/*
+# But not example files
+!nginx/conf.d/*.example
+
+# ignore everything in supervisord.d directory
+supervisord.d/*
+
+# But not example files
+!supervisord.d/*.example
+
+# Ignore everything in nginx/ssl directory
 nginx/ssl/*
-php/supervisor.d/*
+
+# but don't ignore the folder itself
+!nginx/ssl
