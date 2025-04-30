@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policymap SYSTEM "policy.dtd">
+<policymap>
+  <!-- Allow PDF and PS reading -->
+  <policy domain="coder" rights="read|write" pattern="PDF" />
+  <policy domain="coder" rights="read|write" pattern="PS" />
+
+  <!-- Set very large limits for processing -->
+  <policy domain="resource" name="memory" value="2GiB"/>
+  <policy domain="resource" name="map" value="4GiB"/>
+  <policy domain="resource" name="area" value="8GiB"/>
+  <policy domain="resource" name="disk" value="10GiB"/>
+  <policy domain="resource" name="file" value="768"/>
+  <policy domain="resource" name="thread" value="8"/>
+
+  <!-- Set time limit to prevent infinite processing -->
+  <policy domain="system" name="max-memory-request" value="256MiB"/>
+  <policy domain="system" name="max-time" value="3600"/>
+
+  <!-- Security -->
+  <policy domain="path" rights="none" pattern="@*" />
+</policymap>
+
