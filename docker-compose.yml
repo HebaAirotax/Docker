@@ -6,8 +6,10 @@ services:
       context: ./php
     container_name: app
     volumes:
-      - ../laravel:/var/www/html
+      - ${PROJECT_PATH}:/var/www/html
       - ./php/imagemagick/policy.xml:/etc/ImageMagick-6/policy.xml
+      - ./php/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+      - ./php/supervisor.d:/etc/supervisor/conf.d/
     ports:
       - "8000:8000"
       - "5173:5173"
@@ -36,7 +38,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ../laravel:/var/www/html
+      - ${PROJECT_PATH}:/var/www/html
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./certbot/www:/var/www/certbot
@@ -60,10 +62,10 @@ services:
     image: mysql:8.0
     container_name: mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: app_db
-      MYSQL_USER: app_user
-      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -83,8 +85,8 @@ services:
     ports:
       - "27017:27017"
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=example
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
       - mongodb_data:/data/db
     networks:

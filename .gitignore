@@ -1,1 +1,9 @@
 DB Backup
+.env
+
+!nginx/conf.d
+!nginx/ssl
+!php/supervisor.d
+nginx/conf.d/*
+nginx/ssl/*
+php/supervisor.d/*
