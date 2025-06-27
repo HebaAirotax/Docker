@@ -13,6 +13,8 @@ ocr = RapidOCR(
     det_model_path="models/en_PP-OCRv3_det_infer.onnx",
     rec_model_path="models/en_PP-OCRv4_rec_server_infer.onnx",
     cls_model_path="models/ch_ppocr_mobile_v2.0_cls_train.onnx",
+    lang="en",
+    ocr_version="PP-OCRv4",
     use_angle_cls=True,
     use_space_char=True  # ← this is the key
 )
