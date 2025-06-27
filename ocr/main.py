@@ -12,7 +12,9 @@ app = FastAPI()
 ocr = RapidOCR(
     det_model_path="models/en_PP-OCRv3_det_infer.onnx",
     rec_model_path="models/en_PP-OCRv4_rec_server_infer.onnx",
-    cls_model_path="models/ch_ppocr_mobile_v2.0_cls_train.onnx"
+    cls_model_path="models/ch_ppocr_mobile_v2.0_cls_train.onnx",
+    use_angle_cls=True,
+    use_space_char=True  # ← this is the key
 )
 
 class OCRRequest(BaseModel):
