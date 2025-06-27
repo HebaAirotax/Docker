@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     supervisor
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+RUN docker-php-ext-install mysqli pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Install MongoDB extension
 RUN pecl install mongodb-1.21.0 \
@@ -19,6 +19,12 @@ RUN pecl install mongodb-1.21.0 \
 # Install PECL extensions
 RUN pecl install imagick redis rdkafka \
     && docker-php-ext-enable imagick redis rdkafka
+
+# Create PHP error log file
+RUN mkdir -p /var/log && touch /var/log/php_errors.log
+
+# Add custom PHP config
+COPY php.ini /usr/local/etc/php/conf.d/
 
 # Node.js (for Vue dev server)
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs

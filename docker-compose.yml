@@ -13,6 +13,8 @@ services:
     ports:
       - "8000:8000"
       - "5173:5173"
+      - "6001:6001"
+      - "3030:3030"
     environment:
       - QUEUE_CONNECTION=redis
       - BROADCAST_DRIVER=log
@@ -30,6 +32,15 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+
+  ocr:
+    container_name: ocr
+    build:
+      context: ./paddleocr
+    ports:
+      - "8868:8868"
+    networks:
+      - app-network
 
   nginx:
     image: nginx:alpine
@@ -112,6 +123,15 @@ services:
       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
     depends_on:
       - zookeeper
+    networks:
+      - app-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025"     # SMTP port
+      - "8025:8025"     # Web UI
     networks:
       - app-network
 
