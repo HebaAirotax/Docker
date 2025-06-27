@@ -36,7 +36,7 @@ services:
   ocr:
     container_name: ocr
     build:
-      context: ./paddleocr
+      context: ./ocr
     ports:
       - "8868:8868"
     networks:
