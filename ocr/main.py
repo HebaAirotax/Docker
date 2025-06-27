@@ -26,7 +26,16 @@ def midpoint(box):
     y = [pt[1] for pt in box]
     return sum(x) / len(x), sum(y) / len(y)
 
-def clean_text_lines(text_lines, row_threshold=20):
+def rebuild_row_with_spacing(row, gap_threshold=15):
+    line = row[0]['text']
+    for prev, curr in zip(row, row[1:]):
+        gap = curr['x'] - prev['x']
+        if gap > gap_threshold:
+            line += ' '
+        line += curr['text']
+    return line
+
+def clean_text_lines(text_lines, row_threshold=15):
     # Step 1: Normalize into midpoints
     normalized = []
     for line in text_lines:
@@ -54,8 +63,7 @@ def clean_text_lines(text_lines, row_threshold=20):
     # Step 4: Rebuild into lines
     final_lines = []
     for row in rows:
-        line = " ".join([item['text'] for item in row])
-        final_lines.append(line)
+        final_lines.append(rebuild_row_with_spacing(row))
 
     return "\n".join(final_lines)
 
