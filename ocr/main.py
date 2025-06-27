@@ -54,7 +54,7 @@ def clean_text_lines(text_lines, row_threshold=20):
     # Step 4: Rebuild into lines
     final_lines = []
     for row in rows:
-        line = "\t".join([item['text'] for item in row])
+        line = " ".join([item['text'] for item in row])
         final_lines.append(line)
 
     return "\n".join(final_lines)
