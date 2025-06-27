@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+Pillow
+pdf2image
+onnxruntime
+rapidocr_onnxruntime

@@ -39,6 +39,8 @@ services:
       context: ./ocr
     ports:
       - "8868:8868"
+    volumes:
+      - ./ocr/models:/app/models  # 👈 Mount models directly
     networks:
       - app-network
 
