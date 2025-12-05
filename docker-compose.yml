@@ -9,8 +9,8 @@ services:
     volumes:
       - ${PROJECT_PATH}:/var/www/html
       - ./php/imagemagick/policy.xml:/etc/ImageMagick-6/policy.xml
-      - ./php/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
-      - ./php/supervisor.d:/etc/supervisor/conf.d/
+      - ./php/supervisord.conf:/etc/supervisor/supervisord.conf
+      - ./php/supervisor.d:/etc/supervisor/programs.d/
     ports:
       - "8000:8000"
       - "5173:5173"
@@ -24,11 +24,11 @@ services:
       - redis
       - kafka
       - mongodb
-    command: supervisord -c /etc/supervisor/conf.d/supervisord.conf
+    command: supervisord -c /etc/supervisor/supervisord.conf
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      test: ["CMD-SHELL", "php-fpm -tt >/dev/null 2>&1 && ss -lnt | grep -q ':9000'"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -37,6 +37,8 @@ services:
   ocr:
     restart: always
     container_name: ocr
+    environment:
+      - LOG_LEVEL=debug
     build:
       context: ./ocr
     ports:

@@ -6,6 +6,23 @@ from pydantic import BaseModel
 from PIL import Image
 from pdf2image import convert_from_bytes
 from rapidocr_onnxruntime import RapidOCR
+import logging
+import sys
+from fastapi.logger import logger
+    
+# gunicorn logging settings
+gunicorn_logger = logging.getLogger('gunicorn.error')
+logger.handlers = gunicorn_logger.handlers
+logger.setLevel(logging.DEBUG)
+    
+# create custom handler for INFO msg
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setLevel(logging.DEBUG)
+    
+logger.addHandler(stdout_handler)
+    
+def get_logger(name):
+    return logger
 
 app = FastAPI()
 
@@ -71,6 +88,7 @@ def clean_text_lines(text_lines, row_threshold=15):
 
 @app.post("/ocr")
 def run_ocr(data: OCRRequest):
+    logger.info(f"Received OCR request: {data}")
     pages = []
 
     if data.image_base64:
