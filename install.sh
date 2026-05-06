@@ -21,7 +21,7 @@ NGINX_CONF_DIR="$SCRIPT_DIR/nginx/conf.d"
 
 # ── Disable services here (leave array empty to enable all) ─────────────────
 # Add exact service names from SERVICES below to skip them entirely.
-# Example:  DISABLED_SERVICES=("Airtable-Sync" "Integration-Service")
+# Example:  DISABLED_SERVICES=("Airtable-Service" "Integration-Service")
 DISABLED_SERVICES=(
   # "Billing-Service"
   # "Subscriptions-Service"
@@ -29,7 +29,7 @@ DISABLED_SERVICES=(
   # "Forms-Service"
   # "File-Management-Service"
   # "Integration-Service"
-  # "Airtable-Sync"
+  # "Airtable-Service"
 )
 
 # ── Portal services ───────────────────────────────────────────────────────────
@@ -43,7 +43,7 @@ SERVICES=(
   "Forms-Service"
   "File-Management-Service"
   "Integration-Service"
-  "Airtable-Sync"
+  "Airtable-Service"
   "FrontEnd"
 )
 
@@ -60,8 +60,22 @@ NGINX_TEMPLATE_MAP["tasks"]="Task-Service"
 NGINX_TEMPLATE_MAP["forms"]="Forms-Service"
 NGINX_TEMPLATE_MAP["files"]="File-Management-Service"
 NGINX_TEMPLATE_MAP["integration"]="Integration-Service"
-NGINX_TEMPLATE_MAP["airtable"]="Airtable-Sync"
+NGINX_TEMPLATE_MAP["airtable"]="Airtable-Service"
 NGINX_TEMPLATE_MAP["portal"]="FrontEnd"
+
+# ── Git repository URLs ──────────────────────────────────────────────────────
+declare -A SVC_REPO
+SVC_REPO["Core-BackEnd"]="git@github.com:AiroTax/Core-Service-Restructure.git"
+SVC_REPO["NotificationAndLogs"]="git@github.com:AiroTax/NotificationAndLogs.git"
+SVC_REPO["Billing-Service"]="git@github.com:AiroTax/Billing-Service.git"
+SVC_REPO["Inventory-Service"]="git@github.com:AiroTax/Inventory-Service.git"
+SVC_REPO["Subscriptions-Service"]="git@github.com:AiroTax/Subscriptions-Service.git"
+SVC_REPO["Task-Service"]="git@github.com:AiroTax/Task-Service.git"
+SVC_REPO["Forms-Service"]="git@github.com:AiroTax/Forms-Service.git"
+SVC_REPO["File-Management-Service"]="git@github.com:AiroTax/File-Management-Service.git"
+SVC_REPO["Integration-Service"]="git@github.com:AiroTax/Integration-Service.git"
+SVC_REPO["Airtable-Service"]="git@github.com:AiroTax/Airtable-Sync.git"
+SVC_REPO["FrontEnd"]="git@github.com:AiroTax/FrontEnd.git"
 
 # ── Per-service identity, DB type, DB name, Redis DB index ───────────────────
 # DB_TYPE: "mongo" = MongoDB primary  |  "mysql" = MySQL primary
@@ -76,7 +90,7 @@ SVC_APP_NAME["Task-Service"]="Task Service"
 SVC_APP_NAME["Forms-Service"]="Forms Service"
 SVC_APP_NAME["File-Management-Service"]="File Management Service"
 SVC_APP_NAME["Integration-Service"]="Integration Service"
-SVC_APP_NAME["Airtable-Sync"]="Airtable Sync"
+SVC_APP_NAME["Airtable-Service"]="Airtable Service"
 
 SVC_SERVICE_NAME["Core-BackEnd"]="core-service"
 SVC_SERVICE_NAME["NotificationAndLogs"]="notifications-service"
@@ -87,7 +101,7 @@ SVC_SERVICE_NAME["Task-Service"]="task-service"
 SVC_SERVICE_NAME["Forms-Service"]="forms-service"
 SVC_SERVICE_NAME["File-Management-Service"]="file-management-service"
 SVC_SERVICE_NAME["Integration-Service"]="integration-service"
-SVC_SERVICE_NAME["Airtable-Sync"]="airtable-sync"
+SVC_SERVICE_NAME["Airtable-Service"]="airtable-service"
 
 SVC_DB_TYPE["Core-BackEnd"]="mongo"
 SVC_DB_TYPE["NotificationAndLogs"]="mongo"
@@ -98,7 +112,7 @@ SVC_DB_TYPE["Task-Service"]="mongo"
 SVC_DB_TYPE["Forms-Service"]="mongo"
 SVC_DB_TYPE["File-Management-Service"]="mongo"
 SVC_DB_TYPE["Integration-Service"]="mysql"
-SVC_DB_TYPE["Airtable-Sync"]="mongo"
+SVC_DB_TYPE["Airtable-Service"]="mongo"
 
 SVC_DB_NAME["Core-BackEnd"]="core_service"
 SVC_DB_NAME["NotificationAndLogs"]="notifications"
@@ -109,7 +123,7 @@ SVC_DB_NAME["Task-Service"]="tasks"
 SVC_DB_NAME["Forms-Service"]="forms"
 SVC_DB_NAME["File-Management-Service"]="file_management"
 SVC_DB_NAME["Integration-Service"]="integration"
-SVC_DB_NAME["Airtable-Sync"]="airtable_sync"
+SVC_DB_NAME["Airtable-Service"]="airtable_sync"
 
 # Subdomain prefix — used to construct APP_URL (https://<subdomain>.<domain>)
 declare -A SVC_SUBDOMAIN
@@ -122,7 +136,7 @@ SVC_SUBDOMAIN["Task-Service"]="tasks"
 SVC_SUBDOMAIN["Forms-Service"]="forms"
 SVC_SUBDOMAIN["File-Management-Service"]="files"
 SVC_SUBDOMAIN["Integration-Service"]="integration"
-SVC_SUBDOMAIN["Airtable-Sync"]="airtable"
+SVC_SUBDOMAIN["Airtable-Service"]="airtable"
 
 # Redis DB index: one unique integer per service (0-9)
 SVC_REDIS_DB["Core-BackEnd"]=0
@@ -134,7 +148,7 @@ SVC_REDIS_DB["Task-Service"]=5
 SVC_REDIS_DB["Forms-Service"]=6
 SVC_REDIS_DB["File-Management-Service"]=7
 SVC_REDIS_DB["Integration-Service"]=8
-SVC_REDIS_DB["Airtable-Sync"]=9
+SVC_REDIS_DB["Airtable-Service"]=9
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 info()    { printf "\033[0;34m[INFO]\033[0m  %s\n" "$*"; }
@@ -209,9 +223,41 @@ fi
 sep
 
 # ==============================================================================
-# STEP 0 — Create Docker .env from .env.example (with generated credentials)
+# STEP 0 — Clone / verify service repositories
 # ==============================================================================
-info "Step 0/7  Creating Docker .env"
+info "Step 0/8  Cloning service repositories"
+
+mkdir -p "$SERVICES_ROOT"
+
+for svc in "${SERVICES[@]}"; do
+  is_enabled "$svc" || { warn "  $svc  →  disabled, skipping"; continue; }
+  repo="${SVC_REPO[$svc]:-}"
+  dir="$SERVICES_ROOT/$svc"
+
+  if [[ -z "$repo" ]]; then
+    warn "  $svc  →  no repo URL defined, skipping"
+    continue
+  fi
+
+  if [[ -d "$dir/.git" ]]; then
+    ok "  $svc  →  already cloned (skipping)"
+  else
+    info "  $svc  →  cloning from $repo"
+    if git clone "$repo" "$dir"; then
+      ok "  $svc  →  cloned successfully"
+    else
+      err "  $svc  →  git clone failed — check SSH keys and network access"
+      exit 1
+    fi
+  fi
+done
+
+sep
+
+# ==============================================================================
+# STEP 1 — Create Docker .env from .env.example (with generated credentials)
+# ==============================================================================
+info "Step 1/8  Creating Docker .env"
 
 DOCKER_ENV="$SCRIPT_DIR/.env"
 DOCKER_ENV_EXAMPLE="$SCRIPT_DIR/.env.example"
@@ -250,9 +296,9 @@ DOCKER_MONGO_PASS="$(grep '^MONGO_INITDB_ROOT_PASSWORD=' "$DOCKER_ENV" | cut -d=
 sep
 
 # ==============================================================================
-# STEP 1 — Copy .env.example → .env
+# STEP 2 — Copy .env.example → .env
 # ==============================================================================
-info "Step 1/7  Creating .env files from .env.example"
+info "Step 2/8  Creating .env files from .env.example"
 
 for svc in "${SERVICES[@]}"; do
   is_enabled "$svc" || { warn "  $svc  →  disabled, skipping"; continue; }
@@ -279,9 +325,9 @@ done
 sep
 
 # ==============================================================================
-# STEP 2 — Per-service identity, database, and Redis configuration
+# STEP 3 — Per-service identity, database, and Redis configuration
 # ==============================================================================
-info "Step 2/7  Configuring APP_NAME, DB, Redis per service"
+info "Step 3/8  Configuring APP_NAME, DB, Redis per service"
 
 for svc in "${SERVICES[@]}"; do
   is_enabled "$svc" || continue
@@ -393,9 +439,9 @@ fi
 sep
 
 # ==============================================================================
-# STEP 3 — Generate APP_KEY for each service
+# STEP 4 — Generate APP_KEY for each service
 # ==============================================================================
-info "Step 3/7  Generating APP_KEY for each service"
+info "Step 4/8  Generating APP_KEY for each service"
 
 for svc in "${SERVICES[@]}"; do
   is_enabled "$svc" || continue
@@ -409,9 +455,9 @@ done
 sep
 
 # ==============================================================================
-# STEP 4 — Generate shared JWT_SECRET
+# STEP 5 — Generate shared JWT_SECRET
 # ==============================================================================
-info "Step 4/7  Generating shared JWT_SECRET"
+info "Step 5/8  Generating shared JWT_SECRET"
 
 JWT_SECRET="$(openssl rand -base64 48 | tr -d '\n/+=' | head -c 64)"
 ok "  JWT_SECRET generated (64 chars)"
@@ -428,9 +474,9 @@ ok "  JWT_SECRET written to all enabled service .env files"
 sep
 
 # ==============================================================================
-# STEP 5 — Generate per-service SERVICE_TOKENs
+# STEP 6 — Generate per-service SERVICE_TOKENs
 # ==============================================================================
-info "Step 5/7  Generating per-service SERVICE_TOKENs"
+info "Step 6/8  Generating per-service SERVICE_TOKENs"
 
 declare -A TOKENS
 TOKENS[Core-BackEnd]="$(openssl rand -hex 32)"
@@ -442,7 +488,7 @@ TOKENS[Task-Service]="$(openssl rand -hex 32)"
 TOKENS[Forms-Service]="$(openssl rand -hex 32)"
 TOKENS[File-Management-Service]="$(openssl rand -hex 32)"
 TOKENS[Integration-Service]="$(openssl rand -hex 32)"
-TOKENS[Airtable-Sync]="$(openssl rand -hex 32)"
+TOKENS[Airtable-Service]="$(openssl rand -hex 32)"
 
 # Write each service's own SERVICE_TOKEN into its .env
 for svc in "${!TOKENS[@]}"; do
@@ -456,9 +502,9 @@ done
 sep
 
 # ==============================================================================
-# STEP 6 — Propagate cross-service tokens
+# STEP 7 — Propagate cross-service tokens
 # ==============================================================================
-info "Step 6/7  Propagating cross-service tokens"
+info "Step 7/8  Propagating cross-service tokens"
 
 # Helper: write a cross-service token into target services' .env files,
 # but only if the target service is enabled.
@@ -478,37 +524,37 @@ BILLING_TOKEN="${TOKENS[Billing-Service]}"
 INVENTORY_TOKEN="${TOKENS[Inventory-Service]}"
 INTEGRATION_TOKEN="${TOKENS[Integration-Service]}"
 TASK_TOKEN="${TOKENS[Task-Service]}"
-AIRTABLE_TOKEN="${TOKENS[Airtable-Sync]}"
+AIRTABLE_TOKEN="${TOKENS[Airtable-Service]}"
 
 propagate "NOTIFICATION_SERVICE_TOKEN" "$NOTIF_TOKEN" \
   Core-BackEnd Billing-Service NotificationAndLogs Inventory-Service \
   Subscriptions-Service Task-Service Forms-Service \
-  File-Management-Service Integration-Service Airtable-Sync
+  File-Management-Service Integration-Service Airtable-Service
 ok "  NOTIFICATION_SERVICE_TOKEN  →  all enabled backend services"
 
 propagate "CORE_SERVICE_TOKEN" "$CORE_TOKEN" \
-  Integration-Service Subscriptions-Service Task-Service Airtable-Sync
-ok "  CORE_SERVICE_TOKEN          →  Integration, Subscriptions, Task, Airtable-Sync"
+  Integration-Service Subscriptions-Service Task-Service Airtable-Service
+ok "  CORE_SERVICE_TOKEN          →  Integration, Subscriptions, Task, Airtable-Service"
 
 propagate "CORE_SERVICE" "https://core.${DOMAIN}" \
-  Integration-Service Subscriptions-Service Task-Service Airtable-Sync
-ok "  CORE_SERVICE URL            →  Integration, Subscriptions, Task, Airtable-Sync"
+  Integration-Service Subscriptions-Service Task-Service Airtable-Service
+ok "  CORE_SERVICE URL            →  Integration, Subscriptions, Task, Airtable-Service"
 
 propagate "BILLING_SERVICE_TOKEN" "$BILLING_TOKEN" \
   Integration-Service Task-Service
 ok "  BILLING_SERVICE_TOKEN       →  Integration, Task"
 
 propagate "INVENTORY_SERVICE_TOKEN" "$INVENTORY_TOKEN" \
-  Integration-Service Task-Service Airtable-Sync
-ok "  INVENTORY_SERVICE_TOKEN     →  Integration, Task, Airtable-Sync"
+  Integration-Service Task-Service Airtable-Service
+ok "  INVENTORY_SERVICE_TOKEN     →  Integration, Task, Airtable-Service"
 
 propagate "INTEGRATION_SERVICE_TOKEN" "$INTEGRATION_TOKEN" \
   Task-Service
 ok "  INTEGRATION_SERVICE_TOKEN   →  Task-Service"
 
 propagate "TASK_SERVICE_TOKEN" "$TASK_TOKEN" \
-  Airtable-Sync
-ok "  TASK_SERVICE_TOKEN          →  Airtable-Sync"
+  Airtable-Service
+ok "  TASK_SERVICE_TOKEN          →  Airtable-Service"
 
 propagate "AIRTABLE_SYNC_SERVICE_TOKEN" "$AIRTABLE_TOKEN" \
   Task-Service
@@ -518,7 +564,7 @@ ok "  AIRTABLE_SYNC_SERVICE_TOKEN →  Task-Service"
 # All backend services need to know the notifications endpoint URL
 propagate "NOTIFICATION_SERVICE" "https://notifications.${DOMAIN}" \
   Core-BackEnd Billing-Service Inventory-Service Subscriptions-Service \
-  Task-Service Forms-Service File-Management-Service Integration-Service Airtable-Sync
+  Task-Service Forms-Service File-Management-Service Integration-Service Airtable-Service
 ok "  NOTIFICATION_SERVICE URL     →  all enabled backend services"
 
 # NotificationAndLogs needs frontend URL (for CORS / redirect) and the Core DB name
@@ -534,9 +580,9 @@ fi
 sep
 
 # ==============================================================================
-# STEP 7 — Supervisord & nginx conf files
+# STEP 8 — Supervisord & nginx conf files
 # ==============================================================================
-info "Step 7/7  Setting up supervisord and nginx configuration"
+info "Step 8/8  Setting up supervisord and nginx configuration"
 
 # ── Supervisord ───────────────────────────────────────────────────────────────
 # Appends one [program:] block per service to the supervisord conf file.
@@ -585,7 +631,7 @@ else
   is_enabled "Forms-Service"           && write_supervisor_program "forms"             "Forms-Service"           2
   is_enabled "File-Management-Service" && write_supervisor_program "file-management"   "File-Management-Service" 2
   is_enabled "Integration-Service"     && write_supervisor_program "integration"       "Integration-Service"     10 "update-transaction-cache"
-  is_enabled "Airtable-Sync"           && write_supervisor_program "airtable-sync"     "Airtable-Sync"           2
+  is_enabled "Airtable-Service"        && write_supervisor_program "airtable-service"  "Airtable-Service"        2
 
   if is_enabled "FrontEnd"; then
     cat >> "$SUPERVISOR_CONF" <<'FRONTEND'
