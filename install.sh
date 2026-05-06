@@ -160,7 +160,8 @@ sep()     { printf "\033[0;90m%s\033[0m\n" "────────────
 # Returns 0 (true) if service is NOT in DISABLED_SERVICES
 is_enabled() {
   local svc="$1"
-  for d in "${DISABLED_SERVICES[@]+${DISABLED_SERVICES[@]}}"; do
+  [[ ${#DISABLED_SERVICES[@]} -eq 0 ]] && return 0
+  for d in "${DISABLED_SERVICES[@]}"; do
     [[ "$d" == "$svc" ]] && return 1
   done
   return 0
@@ -195,10 +196,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ── Sanity check ──────────────────────────────────────────────────────────────
-if [[ ! -d "$SERVICES_ROOT" ]]; then
-  err "Services root not found: $SERVICES_ROOT"
-  exit 1
-fi
+mkdir -p "$SERVICES_ROOT"
 
 if [[ -z "$DOMAIN" ]]; then
   printf "  Enter base domain (e.g. example.com): "
@@ -215,7 +213,7 @@ printf "\033[1;36m  Portal Install Script\033[0m\n"
 echo "  Services root    : $SERVICES_ROOT"
 echo "  Domain           : $DOMAIN"
 echo "  Force            : $FORCE"
-if [[ ${#DISABLED_SERVICES[@]+${#DISABLED_SERVICES[@]}} -gt 0 ]]; then
+if [[ ${#DISABLED_SERVICES[@]} -gt 0 ]]; then
   echo "  Disabled services: ${DISABLED_SERVICES[*]}"
 else
   echo "  Disabled services: (none)"
@@ -226,8 +224,6 @@ sep
 # STEP 0 — Clone / verify service repositories
 # ==============================================================================
 info "Step 0/8  Cloning service repositories"
-
-mkdir -p "$SERVICES_ROOT"
 
 for svc in "${SERVICES[@]}"; do
   is_enabled "$svc" || { warn "  $svc  →  disabled, skipping"; continue; }
@@ -651,7 +647,9 @@ FRONTEND
 fi
 
 # ── nginx conf files ──────────────────────────────────────────────────────────
-NGINX_TEMPLATES_DIR="$SCRIPT_DIR/nginx/templates"mkdir -p "$NGINX_CONF_DIR"echo ""
+NGINX_TEMPLATES_DIR="$SCRIPT_DIR/nginx/templates"
+mkdir -p "$NGINX_CONF_DIR"
+echo ""
 info "  Nginx conf files:"
 for template in "${!NGINX_TEMPLATE_MAP[@]}"; do
   svc="${NGINX_TEMPLATE_MAP[$template]}"
