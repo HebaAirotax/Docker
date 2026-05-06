@@ -708,3 +708,37 @@ echo "  JWT_SECRET, SERVICE_TOKEN, DB (Mongo/MySQL), Redis, Queue, Cache,"
 echo "  Reverb (notifications), VITE_ endpoints (frontend)."
 echo "  Cross-service tokens and service URLs are fully propagated."
 echo ""
+
+# ==============================================================================
+# Step 9 — Fix storage / cache permissions inside the container
+# ==============================================================================
+sep
+info "Step 9 — Fixing storage & bootstrap/cache permissions (www-data 33:33)…"
+echo ""
+
+PHP_SERVICES=(
+  "Core-Service"
+  "Notifications-Service"
+  "Billing-Service"
+  "Inventory-Service"
+  "Subscriptions-Service"
+  "Task-Service"
+  "Forms-Service"
+  "File-Management-Service"
+  "Integration-Service"
+  "Airtable-Service"
+)
+
+for svc in "${PHP_SERVICES[@]}"; do
+  if ! is_enabled "$svc"; then
+    warn "    $svc  →  disabled, skipping"
+    continue
+  fi
+  docker-compose exec -T app chown -R 33:33 \
+    "/var/www/html/${svc}/storage" \
+    "/var/www/html/${svc}/bootstrap/cache" \
+    && ok "    $svc  →  permissions set" \
+    || warn "    $svc  →  chown failed (container may not be running)"
+done
+
+echo ""
