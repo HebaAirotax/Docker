@@ -34,8 +34,8 @@ DISABLED_SERVICES=(
 
 # ── Portal services ───────────────────────────────────────────────────────────
 SERVICES=(
-  "Core-BackEnd"
-  "NotificationAndLogs"
+  "Core-Service"
+  "Notifications-Service"
   "Billing-Service"
   "Inventory-Service"
   "Subscriptions-Service"
@@ -51,8 +51,8 @@ SERVICES=(
 # Keys must match filenames under nginx/templates/ (without .conf)
 # Values must match entries in SERVICES above
 declare -A NGINX_TEMPLATE_MAP
-NGINX_TEMPLATE_MAP["core"]="Core-BackEnd"
-NGINX_TEMPLATE_MAP["notifications"]="NotificationAndLogs"
+NGINX_TEMPLATE_MAP["core"]="Core-Service"
+NGINX_TEMPLATE_MAP["notifications"]="Notifications-Service"
 NGINX_TEMPLATE_MAP["billing"]="Billing-Service"
 NGINX_TEMPLATE_MAP["inventory"]="Inventory-Service"
 NGINX_TEMPLATE_MAP["subscriptions"]="Subscriptions-Service"
@@ -65,8 +65,8 @@ NGINX_TEMPLATE_MAP["portal"]="FrontEnd"
 
 # ── Git repository URLs ──────────────────────────────────────────────────────
 declare -A SVC_REPO
-SVC_REPO["Core-BackEnd"]="git@github.com:AiroTax/Core-Service-Restructure.git"
-SVC_REPO["NotificationAndLogs"]="git@github.com:AiroTax/NotificationAndLogs.git"
+SVC_REPO["Core-Service"]="git@github.com:AiroTax/Core-Service-Restructure.git"
+SVC_REPO["Notifications-Service"]="git@github.com:AiroTax/NotificationAndLogs.git"
 SVC_REPO["Billing-Service"]="git@github.com:AiroTax/Billing-Service.git"
 SVC_REPO["Inventory-Service"]="git@github.com:AiroTax/Inventory-Service.git"
 SVC_REPO["Subscriptions-Service"]="git@github.com:AiroTax/Subscriptions-Service.git"
@@ -81,8 +81,8 @@ SVC_REPO["FrontEnd"]="git@github.com:AiroTax/FrontEnd.git"
 # DB_TYPE: "mongo" = MongoDB primary  |  "mysql" = MySQL primary
 declare -A SVC_APP_NAME SVC_SERVICE_NAME SVC_DB_TYPE SVC_DB_NAME SVC_REDIS_DB
 
-SVC_APP_NAME["Core-BackEnd"]="Core Service"
-SVC_APP_NAME["NotificationAndLogs"]="Notification Service"
+SVC_APP_NAME["Core-Service"]="Core Service"
+SVC_APP_NAME["Notifications-Service"]="Notification Service"
 SVC_APP_NAME["Billing-Service"]="Billing Service"
 SVC_APP_NAME["Inventory-Service"]="Inventory Service"
 SVC_APP_NAME["Subscriptions-Service"]="Subscriptions Service"
@@ -92,8 +92,8 @@ SVC_APP_NAME["File-Management-Service"]="File Management Service"
 SVC_APP_NAME["Integration-Service"]="Integration Service"
 SVC_APP_NAME["Airtable-Service"]="Airtable Service"
 
-SVC_SERVICE_NAME["Core-BackEnd"]="core-service"
-SVC_SERVICE_NAME["NotificationAndLogs"]="notifications-service"
+SVC_SERVICE_NAME["Core-Service"]="core-service"
+SVC_SERVICE_NAME["Notifications-Service"]="notifications-service"
 SVC_SERVICE_NAME["Billing-Service"]="billing-service"
 SVC_SERVICE_NAME["Inventory-Service"]="inventory-service"
 SVC_SERVICE_NAME["Subscriptions-Service"]="subscriptions-service"
@@ -103,8 +103,8 @@ SVC_SERVICE_NAME["File-Management-Service"]="file-management-service"
 SVC_SERVICE_NAME["Integration-Service"]="integration-service"
 SVC_SERVICE_NAME["Airtable-Service"]="airtable-service"
 
-SVC_DB_TYPE["Core-BackEnd"]="mongo"
-SVC_DB_TYPE["NotificationAndLogs"]="mongo"
+SVC_DB_TYPE["Core-Service"]="mongo"
+SVC_DB_TYPE["Notifications-Service"]="mongo"
 SVC_DB_TYPE["Billing-Service"]="mongo"
 SVC_DB_TYPE["Inventory-Service"]="mongo"
 SVC_DB_TYPE["Subscriptions-Service"]="mongo"
@@ -114,8 +114,8 @@ SVC_DB_TYPE["File-Management-Service"]="mongo"
 SVC_DB_TYPE["Integration-Service"]="mysql"
 SVC_DB_TYPE["Airtable-Service"]="mongo"
 
-SVC_DB_NAME["Core-BackEnd"]="core_service"
-SVC_DB_NAME["NotificationAndLogs"]="notifications"
+SVC_DB_NAME["Core-Service"]="core_service"
+SVC_DB_NAME["Notifications-Service"]="notifications"
 SVC_DB_NAME["Billing-Service"]="billing"
 SVC_DB_NAME["Inventory-Service"]="inventory"
 SVC_DB_NAME["Subscriptions-Service"]="subscriptions"
@@ -127,8 +127,8 @@ SVC_DB_NAME["Airtable-Service"]="airtable_sync"
 
 # Subdomain prefix — used to construct APP_URL (https://<subdomain>.<domain>)
 declare -A SVC_SUBDOMAIN
-SVC_SUBDOMAIN["Core-BackEnd"]="core"
-SVC_SUBDOMAIN["NotificationAndLogs"]="notifications"
+SVC_SUBDOMAIN["Core-Service"]="core"
+SVC_SUBDOMAIN["Notifications-Service"]="notifications"
 SVC_SUBDOMAIN["Billing-Service"]="billing"
 SVC_SUBDOMAIN["Inventory-Service"]="inventory"
 SVC_SUBDOMAIN["Subscriptions-Service"]="subscriptions"
@@ -139,8 +139,8 @@ SVC_SUBDOMAIN["Integration-Service"]="integration"
 SVC_SUBDOMAIN["Airtable-Service"]="airtable"
 
 # Redis DB index: one unique integer per service (0-9)
-SVC_REDIS_DB["Core-BackEnd"]=0
-SVC_REDIS_DB["NotificationAndLogs"]=1
+SVC_REDIS_DB["Core-Service"]=0
+SVC_REDIS_DB["Notifications-Service"]=1
 SVC_REDIS_DB["Billing-Service"]=2
 SVC_REDIS_DB["Inventory-Service"]=3
 SVC_REDIS_DB["Subscriptions-Service"]=4
@@ -340,23 +340,41 @@ for svc in "${SERVICES[@]}"; do
   app_url="https://${subdomain}.${DOMAIN}"
 
   # ── Identity ────────────────────────────────────────────────────────────────
-  set_env "$env_file" "APP_NAME"     "$app_name"
+  set_env "$env_file" "APP_NAME"     "\"$app_name\""
   set_env "$env_file" "APP_ENV"      "production"
   set_env "$env_file" "APP_DEBUG"    "false"
   set_env "$env_file" "APP_URL"      "$app_url"
   set_env "$env_file" "LOG_LEVEL"    "error"
   set_env "$env_file" "SERVICE_NAME" "$svc_name"
 
+  # ── Session ──────────────────────────────────────────────────────────────────
+  set_env "$env_file" "SESSION_DRIVER"   "redis"
+  set_env "$env_file" "SESSION_LIFETIME" "120"
+  set_env "$env_file" "SESSION_ENCRYPT"  "false"
+  set_env "$env_file" "SESSION_PATH"     "/"
+  set_env "$env_file" "SESSION_DOMAIN"   "null"
+
   # ── Redis ───────────────────────────────────────────────────────────────────
   set_env "$env_file" "REDIS_CLIENT"      "phpredis"
   set_env "$env_file" "REDIS_HOST"        "redis"
-  set_env "$env_file" "REDIS_PASSWORD"    "null"
+  set_env "$env_file" "REDIS_PASSWORD"    ""
   set_env "$env_file" "REDIS_PORT"        "6379"
   set_env "$env_file" "REDIS_DB"          "$redis_db"
 
   # ── Queue & Cache ─────────────────────────────────────────────────────────
-  set_env "$env_file" "QUEUE_CONNECTION" "redis"
-  set_env "$env_file" "CACHE_STORE"      "redis"
+  set_env "$env_file" "QUEUE_CONNECTION"   "redis"
+  set_env "$env_file" "CACHE_STORE"        "redis"
+  set_env "$env_file" "BROADCAST_CONNECTION" "log"
+
+  # ── Mail (log fallback — replace MAIL_* post-install for real delivery) ──────
+  set_env "$env_file" "MAIL_MAILER"       "log"
+  set_env "$env_file" "MAIL_HOST"         "localhost"
+  set_env "$env_file" "MAIL_PORT"         "587"
+  set_env "$env_file" "MAIL_USERNAME"     ""
+  set_env "$env_file" "MAIL_PASSWORD"     ""
+  set_env "$env_file" "MAIL_ENCRYPTION"   "tls"
+  set_env "$env_file" "MAIL_FROM_ADDRESS" "noreply@${DOMAIN}"
+  set_env "$env_file" "MAIL_FROM_NAME"    "\"$app_name\""
 
   # ── Database ────────────────────────────────────────────────────────────────
   if [[ "$db_type" == "mongo" ]]; then
@@ -388,9 +406,9 @@ for svc in "${SERVICES[@]}"; do
   ok "  $svc  →  APP_NAME / APP_URL / Redis / DB configured (url=${app_url}, db=${db_type}, redis=${redis_db})"
 done
 
-# ── Reverb / broadcast env for NotificationAndLogs ───────────────────────────
-if is_enabled "NotificationAndLogs"; then
-  notif_env="$SERVICES_ROOT/NotificationAndLogs/.env"
+# ── Reverb / broadcast env for Notifications-Service ─────────────────────────
+if is_enabled "Notifications-Service"; then
+  notif_env="$SERVICES_ROOT/Notifications-Service/.env"
   if [[ -f "$notif_env" ]]; then
     set_env "$notif_env" "BROADCAST_DRIVER"   "reverb"
     set_env "$notif_env" "REVERB_APP_ID"      "reverb"
@@ -405,7 +423,7 @@ if is_enabled "NotificationAndLogs"; then
     set_env "$notif_env" "SESSION_ENCRYPT"    "false"
     set_env "$notif_env" "SESSION_PATH"       "/"
     set_env "$notif_env" "SESSION_DOMAIN"     "null"
-    ok "  NotificationAndLogs  →  Reverb/broadcast env set"
+    ok "  Notifications-Service  →  Reverb/broadcast env set"
   fi
 fi
 
@@ -475,8 +493,8 @@ sep
 info "Step 6/8  Generating per-service SERVICE_TOKENs"
 
 declare -A TOKENS
-TOKENS[Core-BackEnd]="$(openssl rand -hex 32)"
-TOKENS[NotificationAndLogs]="$(openssl rand -hex 32)"
+TOKENS[Core-Service]="$(openssl rand -hex 32)"
+TOKENS[Notifications-Service]="$(openssl rand -hex 32)"
 TOKENS[Billing-Service]="$(openssl rand -hex 32)"
 TOKENS[Inventory-Service]="$(openssl rand -hex 32)"
 TOKENS[Subscriptions-Service]="$(openssl rand -hex 32)"
@@ -514,8 +532,8 @@ propagate() {
   done
 }
 
-NOTIF_TOKEN="${TOKENS[NotificationAndLogs]}"
-CORE_TOKEN="${TOKENS[Core-BackEnd]}"
+NOTIF_TOKEN="${TOKENS[Notifications-Service]}"
+CORE_TOKEN="${TOKENS[Core-Service]}"
 BILLING_TOKEN="${TOKENS[Billing-Service]}"
 INVENTORY_TOKEN="${TOKENS[Inventory-Service]}"
 INTEGRATION_TOKEN="${TOKENS[Integration-Service]}"
@@ -523,7 +541,7 @@ TASK_TOKEN="${TOKENS[Task-Service]}"
 AIRTABLE_TOKEN="${TOKENS[Airtable-Service]}"
 
 propagate "NOTIFICATION_SERVICE_TOKEN" "$NOTIF_TOKEN" \
-  Core-BackEnd Billing-Service NotificationAndLogs Inventory-Service \
+  Core-Service Billing-Service Notifications-Service Inventory-Service \
   Subscriptions-Service Task-Service Forms-Service \
   File-Management-Service Integration-Service Airtable-Service
 ok "  NOTIFICATION_SERVICE_TOKEN  →  all enabled backend services"
@@ -559,17 +577,17 @@ ok "  AIRTABLE_SYNC_SERVICE_TOKEN →  Task-Service"
 # ── Service endpoint URLs ───────────────────────────────────────────────────
 # All backend services need to know the notifications endpoint URL
 propagate "NOTIFICATION_SERVICE" "https://notifications.${DOMAIN}" \
-  Core-BackEnd Billing-Service Inventory-Service Subscriptions-Service \
+  Core-Service Billing-Service Inventory-Service Subscriptions-Service \
   Task-Service Forms-Service File-Management-Service Integration-Service Airtable-Service
 ok "  NOTIFICATION_SERVICE URL     →  all enabled backend services"
 
-# NotificationAndLogs needs frontend URL (for CORS / redirect) and the Core DB name
-if is_enabled "NotificationAndLogs"; then
-  notif_env="$SERVICES_ROOT/NotificationAndLogs/.env"
+# Notifications-Service needs frontend URL (for CORS / redirect) and the Core DB name
+if is_enabled "Notifications-Service"; then
+  notif_env="$SERVICES_ROOT/Notifications-Service/.env"
   if [[ -f "$notif_env" ]]; then
     set_env "$notif_env" "FRONTEND_URL"  "https://portal.${DOMAIN}"
-    set_env "$notif_env" "CORE_DATABASE" "${SVC_DB_NAME[Core-BackEnd]}"
-    ok "  FRONTEND_URL / CORE_DATABASE   →  NotificationAndLogs"
+    set_env "$notif_env" "CORE_DATABASE" "${SVC_DB_NAME[Core-Service]}"
+    ok "  FRONTEND_URL / CORE_DATABASE   →  Notifications-Service"
   fi
 fi
 
@@ -588,26 +606,26 @@ write_supervisor_program() {
 
 [program:queue-${name}]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/html/AmalAndCompany/${svc_dir}/artisan queue:work --sleep=3 --tries=3 --timeout=90
+command=php /var/www/html/${svc_dir}/artisan queue:work --sleep=3 --tries=3 --timeout=90
 autostart=true
 autorestart=true
 user=root
 numprocs=${numprocs}
 redirect_stderr=true
-stdout_logfile=/var/www/html/AmalAndCompany/${svc_dir}/storage/logs/supervisor-queue.log
+stdout_logfile=/var/www/html/${svc_dir}/storage/logs/supervisor-queue.log
 EOF
   if [[ -n "$extra_queue" ]]; then
     cat >> "$SUPERVISOR_CONF" <<EOF
 
 [program:queue-${name}-${extra_queue}]
 process_name=%(program_name)s_%(process_num)02d
-command=php /var/www/html/AmalAndCompany/${svc_dir}/artisan queue:work --queue=${extra_queue} --sleep=3 --tries=3 --timeout=90
+command=php /var/www/html/${svc_dir}/artisan queue:work --queue=${extra_queue} --sleep=3 --tries=3 --timeout=90
 autostart=true
 autorestart=true
 user=root
 numprocs=2
 redirect_stderr=true
-stdout_logfile=/var/www/html/AmalAndCompany/${svc_dir}/storage/logs/supervisor-queue.log
+stdout_logfile=/var/www/html/${svc_dir}/storage/logs/supervisor-queue.log
 EOF
   fi
 }
@@ -618,8 +636,8 @@ else
   mkdir -p "$(dirname "$SUPERVISOR_CONF")"
   printf '; Portal services — supervisord program definitions (generated by install.sh)\n' > "$SUPERVISOR_CONF"
 
-  is_enabled "Core-BackEnd"            && write_supervisor_program "core-backend"      "Core-BackEnd"            2
-  is_enabled "NotificationAndLogs"     && write_supervisor_program "notifications"     "NotificationAndLogs"     4
+  is_enabled "Core-Service"            && write_supervisor_program "core-service"      "Core-Service"            2
+  is_enabled "Notifications-Service"   && write_supervisor_program "notifications"     "Notifications-Service"   4
   is_enabled "Billing-Service"         && write_supervisor_program "billing"           "Billing-Service"         2
   is_enabled "Inventory-Service"       && write_supervisor_program "inventory"         "Inventory-Service"       2
   is_enabled "Subscriptions-Service"   && write_supervisor_program "subscriptions"     "Subscriptions-Service"   2
@@ -634,7 +652,7 @@ else
 
 [program:frontend-dev-server]
 command=npm run dev
-directory=/var/www/html/AmalAndCompany/FrontEnd
+directory=/var/www/html/FrontEnd
 autostart=true
 autorestart=true
 user=root
