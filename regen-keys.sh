@@ -161,10 +161,11 @@ info "  MySQL → changing root and user passwords..."
 if docker exec mysql mysql \
     -uroot \
     -p"${OLD_MYSQL_ROOT_PASS}" \
-    -e "ALTER USER 'root'@'%' IDENTIFIED BY '${NEW_MYSQL_ROOT_PASS}';
-        ALTER USER 'root'@'localhost' IDENTIFIED BY '${NEW_MYSQL_ROOT_PASS}';
+    --connect-timeout=10 \
+    -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${NEW_MYSQL_ROOT_PASS}';
+        ALTER USER IF EXISTS 'root'@'%' IDENTIFIED BY '${NEW_MYSQL_ROOT_PASS}';
         ALTER USER '${OLD_MYSQL_USER}'@'%' IDENTIFIED BY '${NEW_MYSQL_USER_PASS}';
-        FLUSH PRIVILEGES;" 2>&1; then
+        FLUSH PRIVILEGES;" 2>/dev/null; then
   ok "  MySQL passwords changed successfully"
 else
   err "  MySQL ALTER USER failed — old credentials are still valid, .env was NOT modified"
