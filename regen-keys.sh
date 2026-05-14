@@ -25,7 +25,7 @@ set -euo pipefail
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVICES_ROOT="$(realpath "$SCRIPT_DIR/../laravel")"
+SERVICES_ROOT="$(realpath "$SCRIPT_DIR/../services")"
 DOCKER_ENV="$SCRIPT_DIR/.env"
 
 # ── Disable services here (must stay in sync with install.sh) ────────────────

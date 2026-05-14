@@ -24,7 +24,7 @@ set -euo pipefail
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVICES_ROOT="$(realpath "$SCRIPT_DIR/../laravel")"
+SERVICES_ROOT="$(realpath "$SCRIPT_DIR/../services")"
 NGINX_CONF_DIR="$SCRIPT_DIR/nginx/conf.d"
 NGINX_TEMPLATES_DIR="$SCRIPT_DIR/nginx/templates"
 
