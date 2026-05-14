@@ -46,5 +46,8 @@ renew-certs:
 ps:
 	docker-compose ps
 
+regen-keys:
+	bash ./regen-keys.sh
+
 clean:
 	docker system prune -f
