@@ -49,5 +49,11 @@ ps:
 regen-keys:
 	bash ./regen-keys.sh
 
+change-domain:
+ifndef DOMAIN
+	$(error DOMAIN is not set. Usage: make change-domain DOMAIN=example.com [PREFIX=v2])
+endif
+	bash ./change-domain.sh --domain=$(DOMAIN) $(if $(PREFIX),--prefix=$(PREFIX),)
+
 clean:
 	docker system prune -f
